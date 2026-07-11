@@ -82,7 +82,7 @@ quick one-off tests directly against Civil 3D.
 
 ### Credits
 
-Developed by Pedro Orcos, with Claude (Anthropic) as co-author: design and
+Developed by Orcosto, with Claude (Anthropic) as co-author: design and
 implementation of most of the tools, debugging of the COM API, and writing
 of this repository's technical documentation.
 
@@ -179,7 +179,7 @@ pruebas puntuales directas contra Civil 3D.
 
 ### Créditos
 
-Desarrollado por Pedro Orcos, con Claude (Anthropic) como coautor: diseño e
+Desarrollado por Orcosto, con Claude (Anthropic) como coautor: diseño e
 implementación de la mayoría de las herramientas, depuración de la API COM y
 redacción de la documentación técnica de este repositorio.
 
