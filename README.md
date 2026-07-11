@@ -79,6 +79,15 @@ Desarrollado por Pedro Orcos, con Claude (Anthropic) como coautor: diseño e
 implementación de la mayoría de las herramientas, depuración de la API COM y
 redacción de la documentación técnica de este repositorio.
 
+### Proyectos relacionados
+
+Inspirado en la idea general de [barbosaihan/civil3d-mcp](https://github.com/barbosaihan/civil3d-mcp)
+(servidor MCP para Civil 3D). No es un fork: la arquitectura es distinta —
+aquel usa TypeScript + un plugin C#/Roslyn que ejecuta código dentro de
+Civil 3D via NETLOAD/TCP, mientras que este servidor es Python puro sobre
+COM/ActiveX (`pywin32`) con herramientas fijas por dominio. No se comparte
+código entre ambos.
+
 ## Licencia
 
 Sin licencia definida todavía — uso personal. Contactar antes de reutilizar
