@@ -1,0 +1,15 @@
+# Versiones antiguas del servidor, superadas por src/civil3d_mcp/
+civil3d_server.py
+civil3d_server_v2_ascii.py
+
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+
+# Notas de proyecto internas (contienen nombres de clientes/proyectos reales)
+00_NOTAS_PROYECTO.md
+00_NOTAS_PROYECTO_backup_*.md
+00_Indice.md
+borrar_pycache.bat

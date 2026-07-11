@@ -1,0 +1,2 @@
+(setq ss (ssadd))(ssadd (handent "30B5") ss)(ssadd (handent "3081") ss)(command "_.CONVTOSURFACE" ss "")
+

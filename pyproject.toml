@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "civil3d-mcp"
+version = "1.0.0"
+description = "Servidor MCP para Civil 3D via COM (pywin32)"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp",
+    "fastmcp",
+    "pywin32",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+civil3d-mcp = "civil3d_mcp.server:main"

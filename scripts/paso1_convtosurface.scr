@@ -1,0 +1,2 @@
+(setq ss (ssadd))(ssadd (handent "FAD") ss)(ssadd (handent "FAE") ss)(ssadd (handent "FAF") ss)(ssadd (handent "FB0") ss)(ssadd (handent "FB1") ss)(ssadd (handent "FB2") ss)(ssadd (handent "FB3") ss)(ssadd (handent "FB4") ss)(ssadd (handent "FB5") ss)(ssadd (handent "FB6") ss)(ssadd (handent "FB7") ss)(ssadd (handent "FB8") ss)(ssadd (handent "FB9") ss)(ssadd (handent "FBA") ss)(ssadd (handent "FBB") ss)(ssadd (handent "FBC") ss)(command "_.CONVTOSURFACE" ss "")
+

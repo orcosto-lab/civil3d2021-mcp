@@ -1,0 +1,1 @@
+(progn (setvar "FILEDIA" 0) (command "_NETLOAD" "G:/Mi unidad/Proyectos/MCP/civil3d_sacred/Civil3D-MCP-Plugin/bin/Release/net8.0-windows/Civil3DMcpPlugin.dll") (setvar "FILEDIA" 1) (princ "\n[MCP Sacred] Plugin cargado."))

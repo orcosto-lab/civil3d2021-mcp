@@ -1,0 +1,2 @@
+(setq ss (ssadd))(ssadd (handent "FBD") ss)(ssadd (handent "FC0") ss)(ssadd (handent "FC1") ss)(ssadd (handent "FC2") ss)(ssadd (handent "FC3") ss)(ssadd (handent "FC4") ss)(ssadd (handent "FC5") ss)(ssadd (handent "FC6") ss)(ssadd (handent "FC7") ss)(ssadd (handent "FC8") ss)(ssadd (handent "FC9") ss)(ssadd (handent "FCA") ss)(ssadd (handent "FCB") ss)(ssadd (handent "FCC") ss)(ssadd (handent "FCD") ss)(ssadd (handent "FCE") ss)(command "_.UNION" ss "")
+

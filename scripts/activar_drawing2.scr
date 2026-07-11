@@ -1,0 +1,1 @@
+(foreach doc (vla-get-documents (vlax-get-acad-object)) (if (wcmatch (vla-get-name doc) "Drawing2*") (vla-activate doc)))
