@@ -1,7 +1,7 @@
 """
 tools_cotas.py  -  Anotacion de cotas de nivel sobre bloques de seccion generados
 
-Flujo validado en SB CANON 1 V02.dwg (03/07/2026):
+Flujo validado en dibujo de produccion B (03/07/2026):
 Un bloque generado desde un plano de seccion (AcDbSection) esta a escala 1:1 y
 su Y local es la altura sobre la Elevation del plano de seccion, por lo que
 cota_real = Y_local + Elevation. Los puntos a acotar son las intersecciones
@@ -140,7 +140,11 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
             "linea de corte se deduce del bounding box de la seccion probando "
             "ambas diagonales y validando contra la geometria del bloque; solo "
             "valido para secciones rectas de 2 vertices. Aborta sin crear nada "
-            "si menos del 80%% de los puntos casan con vertices del bloque."
+            "si menos del 80%% de los puntos casan con vertices del bloque. "
+            "LECCION: las cotas se crean en amarillo (ACI 2) sobre capa_destino "
+            "(IA por defecto); un casado alto NO garantiza que el cluster este "
+            "completo -- reconstruir el grafo de lineas+splines del bloque y "
+            "cruzarlo contra lo ya acotado antes de darlo por cerrado."
         ),
     )
     async def acotar_seccion(
@@ -270,6 +274,10 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
                     except Exception:
                         pass
                     ml.Layer = capa_destino
+                    try:
+                        ml.Color = 2  # amarillo ACI, convencion de cotas (independiente de la capa)
+                    except Exception:
+                        pass
                     cotas.append({"handle": ml.Handle,
                                   "distancia": round(d, 3),
                                   "cota": round(z, decimales)})
@@ -297,20 +305,28 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
             "Acota con MLeaders de nivel (top y bottom reales) los solidos 3D "
             "(AcDb3dSolid, p.ej. vigas) que corta un tramo de seccion, usando "
             "Acad3DSolid.SectionSolid sobre cada solido de capa_solidos en vez de "
-            "intersectar wireframe o mallas. No requiere calibracion de casado: "
-            "la posicion local_x de cada solido es la distancia real a lo largo "
-            "de vertices_seccion (offset=0, dir=1), leida directamente del "
-            "bounding box de la region resultante de SectionSolid. Como "
-            "SectionSolid usa un plano infinito, cada solido se descarta si su "
-            "distancia proyectada cae fuera de [0, longitud_del_tramo] (con un "
-            "margen de tolerancia) -- asi los solidos de un tramo vecino con la "
-            "misma orientacion de corte no se cuelan. Requiere el bloque de "
-            "seccion sin rotacion y a escala unitaria (+-1), igual que "
-            "acotar_seccion. A diferencia de acotar_seccion, vertices_seccion es "
-            "obligatorio aqui: la deduccion automatica por bounding box del "
-            "AcDbSection no es fiable para segmentos cortos o con solapes, y el "
-            "coste de una cota mal emplazada en un elemento estructural (viga) "
-            "es alto."
+            "intersectar wireframe o mallas. La posicion local_x de cada solido "
+            "es la distancia real a lo largo de vertices_seccion (offset=0, "
+            "dir=1), leida del bounding box de la region resultante de "
+            "SectionSolid; luego se calibra dir/offset casando esas alturas "
+            "(top/bottom) contra los vertices 2D de la definicion del bloque, "
+            "igual criterio que acotar_seccion -- el punto de insercion del "
+            "bloque NO tiene por que coincidir con local_x=0. Como SectionSolid "
+            "usa un plano infinito, cada solido se descarta si su distancia "
+            "proyectada cae fuera de [0, longitud_del_tramo] (con un margen de "
+            "tolerancia) -- asi los solidos de un tramo vecino con la misma "
+            "orientacion de corte no se cuelan. Requiere el bloque de seccion "
+            "sin rotacion y a escala unitaria (+-1), igual que acotar_seccion. "
+            "A diferencia de acotar_seccion, vertices_seccion es obligatorio "
+            "aqui: la deduccion automatica por bounding box del AcDbSection no "
+            "es fiable para segmentos cortos o con solapes, y el coste de una "
+            "cota mal emplazada en un elemento estructural (viga) es alto. "
+            "Aborta sin crear nada si menos del 80%% de los puntos casan con "
+            "vertices del bloque. LECCION: las cotas se crean en amarillo (ACI 2) "
+            "sobre capa_destino (IA por defecto); corregido 19/08/2026 tras "
+            "detectar cotas desplazadas en dibujo de produccion A -- version previa "
+            "usaba insercion_bloque + local_x sin calibrar, valido solo si el "
+            "bloque no tiene margen interno antes de la geometria del corte."
         ),
     )
     async def acotar_solidos_seccion(
@@ -320,6 +336,7 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
         elevacion: float,
         capa_destino: str = "IA",
         tolerancia_rango: float = 0.05,
+        tolerancia_calibracion: float = 0.02,
         longitud_directriz: float = 0.35,
         decimales: int = 3,
         altura_texto: float = 0.15,
@@ -336,6 +353,8 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
         capa_destino : capa de las cotas (se crea en cian si no existe).
         tolerancia_rango : margen en metros fuera de [0, longitud] antes de
             descartar un solido como perteneciente a un tramo vecino.
+        tolerancia_calibracion : tolerancia en metros para casar alturas
+            (top/bottom) contra los vertices del bloque al calibrar dir/offset.
         longitud_directriz : largo del tramo vertical del MLeader (hacia abajo).
         decimales : decimales del texto de cota.
         altura_texto : altura del texto del MLeader.
@@ -381,15 +400,8 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
                 p3 = win32com.client.VARIANT(
                     pythoncom.VT_ARRAY | pythoncom.VT_R8, [bx, by, zmin_plano])
 
-                existia = any(l.Name == capa_destino for l in doc.Layers)
-                capa = doc.Layers.Add(capa_destino)
-                if not existia:
-                    capa.Color = 4
-
-                ins = list(ref.InsertionPoint)
-                sx = ref.XScaleFactor
-                ms = doc.ModelSpace
-                cotas = []
+                # --- pasada 1: recoger (d, top, bottom) de cada solido sin crear nada ---
+                crudos = []
                 for solido in solidos:
                     try:
                         region = solido.SectionSolid(p1, p2, p3)
@@ -408,12 +420,49 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
                     region.Delete()
                     if d < -tolerancia_rango or d > L + tolerancia_rango:
                         continue  # pertenece a un tramo vecino con la misma orientacion
+                    crudos.append({"solido": solido, "d": d, "top": mx[2], "bottom": mn[2]})
+                if not crudos:
+                    raise Civil3DError(
+                        "Ningun solido cae dentro de [0, longitud_del_tramo]. "
+                        "Revisar vertices_seccion o capa_solidos.")
 
-                    for cara, z in (("top", mx[2]), ("bottom", mn[2])):
+                # --- calibracion local_x -> bloque (mismo criterio que acotar_seccion) ---
+                # LECCION: el punto de insercion del bloque no tiene por que
+                # coincidir con local_x=0 de vertices_seccion (puede haber margen
+                # interno). Se casa dir/offset por altura (top/bottom) contra los
+                # vertices 2D de la definicion del bloque, no se asume offset=0.
+                vtx = _vertices_bloque(doc, ref.EffectiveName)
+                if not vtx:
+                    raise Civil3DError("La definicion del bloque no tiene lineas.")
+                puntos_cal = [(c["d"], z) for c in crudos for z in (c["top"], c["bottom"])]
+                cal = _calibrar(puntos_cal, vtx, elevacion, tolerancia_calibracion)
+                if cal is None:
+                    raise Civil3DError(
+                        "No se pudo calibrar local_x contra el bloque (sin alturas "
+                        "coincidentes). Revisar elevacion, vertices_seccion o el bloque.")
+                dr, off, casados = cal
+                if casados / len(puntos_cal) < 0.8:
+                    raise Civil3DError(
+                        f"Solo casan {casados}/{len(puntos_cal)} puntos (<80%). "
+                        "No se crea nada. Revisar vertices_seccion o el "
+                        "emparejamiento bloque-solidos.")
+
+                existia = any(l.Name == capa_destino for l in doc.Layers)
+                capa = doc.Layers.Add(capa_destino)
+                if not existia:
+                    capa.Color = 4
+
+                ins = list(ref.InsertionPoint)
+                sx = ref.XScaleFactor
+                ms = doc.ModelSpace
+                cotas = []
+                for c in crudos:
+                    wx = ins[0] + sx * (dr * c["d"] + off)
+                    wz = ins[2]
+                    for cara, z in (("top", c["top"]), ("bottom", c["bottom"])):
                         if cara not in dimensiones:
                             continue
-                        ly = z - elevacion
-                        wx, wy, wz = ins[0] + sx * d, ins[1] + ly, ins[2]
+                        wy = ins[1] + (z - elevacion)
                         pts = win32com.client.VARIANT(
                             pythoncom.VT_ARRAY | pythoncom.VT_R8,
                             [wx, wy, wz, wx, wy - longitud_directriz, wz])
@@ -429,8 +478,12 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
                         except Exception:
                             pass
                         ml.Layer = capa_destino
-                        cotas.append({"handle": ml.Handle, "solido": solido.Handle,
-                                      "cara": cara, "distancia": round(d, 3),
+                        try:
+                            ml.Color = 2  # amarillo ACI, convencion de cotas
+                        except Exception:
+                            pass
+                        cotas.append({"handle": ml.Handle, "solido": c["solido"].Handle,
+                                      "cara": cara, "distancia": round(c["d"], 3),
                                       "cota": round(z, decimales)})
 
                 return {
@@ -439,11 +492,96 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
                     "capa_solidos": capa_solidos,
                     "elevacion_base": elevacion,
                     "longitud_corte": round(L, 3),
+                    "calibracion": {"dir": dr, "offset": round(off, 4),
+                                    "casados": f"{casados}/{len(puntos_cal)}"},
                     "capa": capa_destino,
                     "n_solidos_totales": len(solidos),
                     "n_cotas": len(cotas),
                     "cotas": cotas,
                 }
+            return await run_com(_run)
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    @mcp.tool(
+        name="detectar_seccion",
+        description=(
+            "Dada una capa de seccion (p.ej. '09 Seccion'), localiza en ella el/los "
+            "AcDbSection y AcDbBlockReference generados y propone capas_modelo "
+            "candidatas para acotar_seccion/acotar_solidos_seccion: capas de "
+            "ModelSpace (distintas de capa_seccion) que contienen AcDbLine o "
+            "AcDb3dPolyline, con su recuento, ordenadas de mas a menos lineas. "
+            "Una sola pasada por ModelSpace en vez de listar_capas + "
+            "listar_objetos capa a capa. Si encuentra exactamente 1 AcDbSection y "
+            "1 AcDbBlockReference en la capa, los devuelve tambien como "
+            "handle_seccion/handle_bloque listos para pasar directos; si hay mas "
+            "de uno de cualquiera (varios tramos en la misma capa), NO empareja "
+            "por su cuenta -- devuelve las listas completas en 'secciones'/"
+            "'bloques' para que se elijan a mano. No decide capas_modelo por si "
+            "sola, son solo candidatas: la eleccion final (y el criterio de que "
+            "capas representan el modelo real) la hace quien acota."
+        ),
+    )
+    async def detectar_seccion(
+        capa_seccion: str,
+        min_lineas: int = 1,
+    ) -> dict[str, Any]:
+        """
+        Parameters
+        ----------
+        capa_seccion : capa que contiene el AcDbSection y su bloque generado.
+        min_lineas : descarta de las candidatas las capas con menos de este
+            numero de AcDbLine/AcDb3dPolyline (ruido de geometria suelta).
+        """
+        try:
+            def _run():
+                doc = client.active_doc
+
+                secciones, bloques, otros = [], [], []
+                conteo: dict[str, int] = {}
+
+                for raw in doc.ModelSpace:
+                    try:
+                        obj = win32com.client.Dispatch(raw)
+                        capa, on = obj.Layer, obj.ObjectName
+                    except Exception:
+                        continue
+                    if capa == capa_seccion:
+                        if on == "AcDbSection":
+                            secciones.append(obj.Handle)
+                        elif on == "AcDbBlockReference":
+                            bloques.append(obj.Handle)
+                        else:
+                            otros.append({"handle": obj.Handle, "tipo": on})
+                    elif on in ("AcDbLine", "AcDb3dPolyline"):
+                        conteo[capa] = conteo.get(capa, 0) + 1
+
+                candidatas = sorted(
+                    ({"capa": c, "n_lineas_3d": n} for c, n in conteo.items()
+                     if n >= min_lineas),
+                    key=lambda x: -x["n_lineas_3d"],
+                )
+
+                resultado: dict[str, Any] = {
+                    "capa_seccion": capa_seccion,
+                    "secciones": secciones,
+                    "bloques": bloques,
+                    "otros_objetos_en_capa": otros,
+                    "capas_modelo_candidatas": candidatas,
+                }
+                if len(secciones) == 1 and len(bloques) == 1:
+                    resultado["handle_seccion"] = secciones[0]
+                    resultado["handle_bloque"] = bloques[0]
+                    resultado["par_unico"] = True
+                else:
+                    resultado["par_unico"] = False
+                    resultado["aviso"] = (
+                        f"{len(secciones)} AcDbSection y {len(bloques)} "
+                        f"AcDbBlockReference en '{capa_seccion}' -- no se "
+                        "empareja automaticamente. Elegir los handles a mano de "
+                        "'secciones'/'bloques'."
+                    )
+                return resultado
             return await run_com(_run)
         except Exception as exc:
             return {"error": str(exc)}

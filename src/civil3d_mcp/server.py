@@ -27,6 +27,17 @@ from . import (
     tools_cotas,
     tools_cache,
     tools_textos,
+    tools_historial,
+    tools_perpendiculares,
+    tools_solidos,
+    tools_fotorreferencia,
+    tools_cogo_calculo,
+    tools_hidrologia_calculo,
+    tools_sight_distance,
+    tools_hidrologia_superficie,
+    tools_taludes,
+    tools_lineas_muestreo,
+    tools_asignar_z,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -61,6 +72,17 @@ tools_geometria.register(mcp, client, run_com)
 tools_cotas.register(mcp, client, run_com)
 tools_cache.register(mcp, client, run_com)
 tools_textos.register(mcp, client, run_com)
+tools_historial.register(mcp, client, run_com)
+tools_perpendiculares.register(mcp, client, run_com)
+tools_solidos.register(mcp, client, run_com)
+tools_fotorreferencia.register(mcp, client, run_com)
+tools_cogo_calculo.register(mcp, client, run_com)
+tools_hidrologia_calculo.register(mcp, client, run_com)
+tools_sight_distance.register(mcp, client, run_com)
+tools_hidrologia_superficie.register(mcp, client, run_com)
+tools_taludes.register(mcp, client, run_com)
+tools_lineas_muestreo.register(mcp, client, run_com)
+tools_asignar_z.register(mcp, client, run_com)
 
 
 def main():

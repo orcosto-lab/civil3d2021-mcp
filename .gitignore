@@ -13,3 +13,13 @@ dist/
 00_NOTAS_PROYECTO_backup_*.md
 00_Indice.md
 borrar_pycache.bat
+
+# Internos / datos de trabajo / generados (no publicar)
+CLAUDE.md
+PLAN_PORTEO_SACRED.md
+Datos/
+Filtros/
+referencia/
+test/
+trabajo_paredes/
+graphify-out/  

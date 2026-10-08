@@ -226,13 +226,104 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
             return {"error": str(exc)}
 
     @mcp.tool(
+        name="borrar_por_filtro",
+        description=(
+            "Borra de ModelSpace todos los objetos que cumplan los filtros indicados: capa "
+            "(exacto, case-insensitive), tipo (ObjectName, p.ej. 'AcDbMLeader', 'AcDbLine'; "
+            "case-insensitive), color ACI (entero 1-255). Filtros acumulativos (AND), igual "
+            "criterio que seleccionar_por_filtro; al menos uno debe especificarse. "
+            "LECCION: por defecto (confirmar=False) NO borra nada -- solo devuelve cuantos "
+            "objetos y de que tipos coinciden, a modo de vista previa. Hay que revisar ese "
+            "recuento y volver a llamar con confirmar=True para borrar de verdad. Precedente: "
+            "eliminar_capas_vacias borro sin informar bien de que borraba; esta tool evita "
+            "repetir el error. El borrado es irreversible salvo Undo manual en Civil3D."
+        ),
+    )
+    async def borrar_por_filtro(
+        capa: str = "",
+        tipo: str = "",
+        color: int = 0,
+        confirmar: bool = False,
+    ) -> dict[str, Any]:
+        try:
+            def _run():
+                if not capa and not tipo and not color:
+                    return {"error": "Especifica al menos un filtro: capa, tipo o color."}
+                ms = client.model_space
+                objetivos = []
+                for obj in ms:
+                    try:
+                        if capa and obj.Layer.lower() != capa.lower():
+                            continue
+                        if tipo and obj.ObjectName.lower() != tipo.lower():
+                            continue
+                        if color:
+                            try:
+                                obj_color = int(obj.color)
+                            except Exception:
+                                continue
+                            if obj_color != color:
+                                continue
+                        objetivos.append(obj)
+                    except Exception:
+                        pass
+                filtros = {"capa": capa or None, "tipo": tipo or None, "color": color or None}
+                if not objetivos:
+                    return {"total": 0, "borrados": 0, "filtros": filtros,
+                            "mensaje": "Ningun objeto coincide con los filtros."}
+                por_tipo: dict[str, int] = {}
+                for obj in objetivos:
+                    try:
+                        on = obj.ObjectName
+                    except Exception:
+                        on = "?"
+                    por_tipo[on] = por_tipo.get(on, 0) + 1
+                if not confirmar:
+                    return {
+                        "total": len(objetivos),
+                        "borrados": 0,
+                        "por_tipo": por_tipo,
+                        "filtros": filtros,
+                        "mensaje": "Vista previa (confirmar=False). Repetir con "
+                                   "confirmar=True para borrar de verdad.",
+                    }
+                borrados, fallos = [], []
+                for obj in objetivos:
+                    try:
+                        h = obj.Handle
+                        obj.Delete()
+                        borrados.append(h)
+                    except Exception:
+                        try:
+                            fallos.append(obj.Handle)
+                        except Exception:
+                            fallos.append("?")
+                return {
+                    "total": len(objetivos),
+                    "borrados": len(borrados),
+                    "handles_borrados": borrados,
+                    "fallos": fallos,
+                    "por_tipo": por_tipo,
+                    "filtros": filtros,
+                }
+            return await run_com(_run)
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    @mcp.tool(
         name="ejecutar_lisp",
         description=(
             "Ejecuta codigo AutoLISP arbitrario en Civil 3D via SendCommand. Util para operaciones "
             "puntuales que no tienen herramienta dedicada: leer variables de sistema, consultar Xdata, "
             "probar LISP experimental, etc. El codigo se envia tal cual — usar con cuidado. "
+            "LECCION: via recomendada para polilineas 3D con cota real usando el comando _3DPOLY "
+            "(NO 3DPOL, ese comando no existe en Civil 3D 2021 espanol - verificado en vivo "
+            "03/08/2026), p.ej. (command \"_3DPOLY\" (list x1 y1 z1) (list x2 y2 z2) \"\"). "
             "Inspirado en execute_lisp de puran-water/autocad-mcp, reimplementado via SendCommand "
-            "en lugar de File IPC. No captura el valor de retorno del LISP (limitacion de SendCommand)."
+            "en lugar de File IPC. No captura el valor de retorno del LISP (limitacion de SendCommand). "
+            "LECCION: al ser un envio ciego puede fallar sin devolver error - tras ejecutarla, "
+            "verificar el resultado real con leer_historial_comandos; si el registro esta "
+            "desactivado, pedir autorizacion para activar_historial_comandos (nunca activarlo sin avisar)."
         ),
     )
     async def ejecutar_lisp(codigo: str) -> dict[str, Any]:

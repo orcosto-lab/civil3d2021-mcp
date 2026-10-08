@@ -15,7 +15,7 @@ import sqlite3
 from datetime import datetime
 from typing import Any, Callable
 from mcp.server.fastmcp import FastMCP
-from .client import Civil3DClient, Civil3DError
+from .client import Civil3DClient, Civil3DError, con_reintentos
 
 log = logging.getLogger("civil3d_mcp.tools.cache")
 
@@ -82,16 +82,21 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
             "a una BD SQLite local (una por dibujo, en D:\\ZZZ Topografia\\Temp Civil IA). Guarda handle, "
             "tipo, capa, color, TextString, punto de insercion y vertices (JSON). Reemplaza los datos "
             "previos de esa capa. Consultar despues con consultar_db. Para vistazos rapidos de <100 "
-            "objetos usar listar_objetos (mas ligero)."
+            "objetos usar listar_objetos (mas ligero). "
+            "LECCION (wiki civil3d-com-api.md #1, aplicado 28/09/2026): itera todo "
+            "ModelSpace en una sola llamada, igual que listar_objetos/contar_objetos "
+            "-- envuelta con reintento automatico ante RPC_E_CALL_REJECTED "
+            "(contencion COM transitoria de Civil 3D, mas probable cuanto mas "
+            "grande el dibujo/la capa; confirmado en vivo con >10 fallos seguidos "
+            "escaneando 213 objetos, resuelto con reintentos). No es un dialogo "
+            "colgado -- ver con_reintentos en client.py."
         ),
     )
     async def escanear_capa_a_db(capa: str, incluir_vertices: bool = True) -> dict[str, Any]:
         try:
-            def _run():
+            def _escanear():
                 doc = client.active_doc
                 ms = doc.ModelSpace
-                db_path = _db_path_for(doc)
-                os.makedirs(DB_DIR, exist_ok=True)
                 ahora = datetime.now().isoformat(timespec="seconds")
                 filas = []
                 por_tipo: dict[str, int] = {}
@@ -129,6 +134,12 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
                         por_tipo[tipo] = por_tipo.get(tipo, 0) + 1
                     except Exception:
                         pass
+                return doc, ahora, filas, por_tipo, con_texto
+
+            def _run():
+                doc, ahora, filas, por_tipo, con_texto = con_reintentos(_escanear)
+                db_path = _db_path_for(doc)
+                os.makedirs(DB_DIR, exist_ok=True)
                 conn = sqlite3.connect(db_path)
                 try:
                     _ensure_schema(conn)

@@ -13,7 +13,7 @@ import time
 from collections import defaultdict
 from typing import Any, Callable
 from mcp.server.fastmcp import FastMCP
-from .client import Civil3DClient
+from .client import Civil3DClient, iter_com_collection
 
 log = logging.getLogger("civil3d_mcp.tools.mesh")
 
@@ -26,9 +26,8 @@ def _punto_clave(pt, tol=3):
 
 def _extraer_segmentos(model, capa_origen: str):
     segmentos = []
-    for i in range(model.Count):
+    for obj in iter_com_collection(model):
         try:
-            obj = model.Item(i)
             if obj.Layer.lower() != capa_origen.lower():
                 continue
             nombre = obj.ObjectName
@@ -94,9 +93,8 @@ def _detectar_triangulos(segmentos):
 def _extraer_polilineas(model, capa_origen: str):
     """Devuelve lista de listas de vertices (uno por polilinea), sin tocar lineas sueltas."""
     polilineas = []
-    for i in range(model.Count):
+    for obj in iter_com_collection(model):
         try:
-            obj = model.Item(i)
             if obj.Layer.lower() != capa_origen.lower():
                 continue
             nombre = obj.ObjectName
@@ -154,7 +152,14 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
             "Lee lineas y polilineas 3D de capa_origen, detecta triangulos por adyacencia "
             "de aristas (asume malla triangulada explicita) y crea una 3DFace por triangulo "
             "en capa_destino. Usar cuando la geometria origen es una triangulacion clasica "
-            "(un contorno + diagonales internas)."
+            "(un contorno + diagonales internas). "
+            "LECCION: la creacion de caras va por SendCommand (_3DFACE) y puede fallar sin "
+            "devolver error - tras ejecutarla, verificar el resultado real con "
+            "leer_historial_comandos; si el registro esta desactivado, pedir autorizacion "
+            "para activar_historial_comandos (nunca activarlo sin avisar). "
+            "LECCION: capa_destino queda como CAPA ACTIVA del dibujo tras ejecutar (no se "
+            "restaura la anterior) - AutoCAD no permite borrar la capa activa; si hace falta "
+            "purgarla despues, activar antes otra capa (p.ej. activar_capa('0'))."
         ),
     )
     async def crear_malla_desde_triangulacion(
@@ -166,8 +171,7 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
                 doc = client.active_doc
                 ms = doc.ModelSpace
 
-                nombres_capas = [doc.Layers.Item(i).Name.lower()
-                                 for i in range(doc.Layers.Count)]
+                nombres_capas = [c.Name.lower() for c in iter_com_collection(doc.Layers)]
                 if capa_destino.lower() not in nombres_capas:
                     nueva = doc.Layers.Add(capa_destino)
                     nueva.color = 3
@@ -222,7 +226,14 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
             "triangulo, 4 vertices -> cuadrilatero, mas de 4 -> fan triangulation desde "
             "el primer vertice. Segmentos sueltos de 2 vertices se ignoran (no forman cara). "
             "Usar cuando la geometria origen son varios contornos/caras ya definidos "
-            "(p.ej. peldanos de una escalera) en lugar de una triangulacion clasica."
+            "(p.ej. peldanos de una escalera) en lugar de una triangulacion clasica. "
+            "LECCION: la creacion de caras va por SendCommand (_3DFACE) y puede fallar sin "
+            "devolver error - tras ejecutarla, verificar el resultado real con "
+            "leer_historial_comandos; si el registro esta desactivado, pedir autorizacion "
+            "para activar_historial_comandos (nunca activarlo sin avisar). "
+            "LECCION: capa_destino queda como CAPA ACTIVA del dibujo tras ejecutar (no se "
+            "restaura la anterior) - AutoCAD no permite borrar la capa activa; si hace falta "
+            "purgarla despues, activar antes otra capa (p.ej. activar_capa('0'))."
         ),
     )
     async def crear_malla_desde_polilineas(
@@ -234,8 +245,7 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
                 doc = client.active_doc
                 ms = doc.ModelSpace
 
-                nombres_capas = [doc.Layers.Item(i).Name.lower()
-                                 for i in range(doc.Layers.Count)]
+                nombres_capas = [c.Name.lower() for c in iter_com_collection(doc.Layers)]
                 if capa_destino.lower() not in nombres_capas:
                     nueva = doc.Layers.Add(capa_destino)
                     nueva.color = 3

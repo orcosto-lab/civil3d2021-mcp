@@ -42,13 +42,36 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
 
     @mcp.tool(
         name="purgar_dibujo",
-        description="Purga el dibujo eliminando capas, bloques y estilos no utilizados (usa -PURGE para evitar dialogo).",
+        description=(
+            "Purga el dibujo eliminando todos los elementos con nombre sin referencia "
+            "(capas, bloques, tipos de linea, estilos de texto/cota, etc.) via el metodo "
+            "nativo Document.PurgeAll (COM directo, sin SendCommand, sin FILEDIA ni "
+            "dialogos, sin verificacion por log). Equivale a 'purge' > Todos > Si a todo. "
+            "Solo elimina lo que tiene cero referencias reales - no puede borrar nada en uso. "
+            "Llama a PurgeAll dos veces: una pasada puede dejar elementos que solo se liberan "
+            "al purgar primero otro elemento que los referenciaba (encadenamiento de "
+            "referencias, documentado por Autodesk); la segunda pasada resuelve esas cadenas. "
+            "LECCION: para purgar SOLO capas vacias con proteccion de capa activa/'0', usar "
+            "eliminar_capas_vacias en su lugar - purgar_dibujo no distingue y no protege nada."
+        ),
     )
     async def purgar_dibujo() -> dict[str, Any]:
         try:
             def _run():
-                client.active_doc.SendCommand("-PURGE\nA\n*\nN\n")
-                return {"success": True, "mensaje": "Purga ejecutada"}
+                doc = client.active_doc
+                antes_capas = doc.Layers.Count
+                antes_bloques = doc.Blocks.Count
+                doc.PurgeAll()
+                doc.PurgeAll()  # segunda pasada: resuelve referencias anidadas liberadas por la primera
+                despues_capas = doc.Layers.Count
+                despues_bloques = doc.Blocks.Count
+                return {
+                    "success": True,
+                    "capas_eliminadas": antes_capas - despues_capas,
+                    "bloques_eliminados": antes_bloques - despues_bloques,
+                    "capas_restantes": despues_capas,
+                    "bloques_restantes": despues_bloques,
+                }
             return await run_com(_run)
         except Exception as exc:
             return {"error": str(exc)}

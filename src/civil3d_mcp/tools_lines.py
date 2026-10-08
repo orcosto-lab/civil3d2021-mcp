@@ -19,7 +19,12 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
         name="crear_linea",
         description=(
             "Crea una linea 3D entre dos puntos. "
-            "Coordenadas en el SRC del dibujo (UTM o locales)."
+            "Coordenadas en el SRC del dibujo (UTM o locales). "
+            "LECCION: el CLAYER previo puede no aplicarse y el objeto caer en capa 0 - "
+            "verificar tras crear y reasignar con cambiar_capa_objetos si hace falta. "
+            "LECCION: esta tool va por SendCommand y puede fallar sin devolver error - tras "
+            "ejecutarla, verificar el resultado real con leer_historial_comandos; si el registro "
+            "esta desactivado, pedir autorizacion para activar_historial_comandos (nunca activarlo sin avisar)."
         ),
     )
     async def crear_linea(
@@ -47,7 +52,15 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
         name="crear_polilinea",
         description=(
             "Crea una polilinea 2D a partir de una lista de puntos [x1,y1, x2,y2, ...]. "
-            "Para polilineas 3D usar acad_create_3dpolyline de civil3d-sacred."
+            "LECCION: esta tool es SOLO 2D (sin cota Z). Para polilineas 3D con cota real, "
+            "usar el comando _3DPOLY via ejecutar_lisp o script .scr (NO 3DPOL, ese comando "
+            "no existe en Civil 3D 2021 espanol - verificado en vivo 03/08/2026); alternativa: "
+            "civil3d-sacred (requiere Civil 3D 2023+, NO disponible en P101 que tiene 2021). "
+            "LECCION: el CLAYER previo puede no aplicarse y el objeto caer en capa 0 - "
+            "verificar tras crear y reasignar con cambiar_capa_objetos si hace falta. "
+            "LECCION: esta tool va por SendCommand y puede fallar sin devolver error - tras "
+            "ejecutarla, verificar el resultado real con leer_historial_comandos; si el registro "
+            "esta desactivado, pedir autorizacion para activar_historial_comandos (nunca activarlo sin avisar)."
         ),
     )
     async def crear_polilinea(
@@ -70,7 +83,7 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
                 if len(puntos) < 4 or len(puntos) % 2 != 0:
                     return {"error": "Minimo 2 puntos (4 valores x,y)"}
                 doc = client.active_doc
-                cmd = f"CLAYER\n{capa}\nPLINE\n"
+                cmd = f"_CLAYER\n{capa}\n_PLINE\n"
                 for i in range(0, len(puntos), 2):
                     cmd += f"{puntos[i]},{puntos[i+1]}\n"
                 cmd += "C\n" if cerrada else "\n"

@@ -70,6 +70,17 @@ independent tool domain, registered in `server.py`:
 - `tools_cotas.py` — elevation labels (MLeader) on cross-section blocks
 - `tools_cache.py` — SQLite entity cache for large layers
 - `tools_textos.py` — text search and visual selection
+- `tools_asignar_z.py` — assign Z from COGO points to line/polyline vertices (XY match)
+- `tools_cogo_calculo.py` — classic COGO calculations (traverses, circular curves); pure math, no drawing needed
+- `tools_fotorreferencia.py` — georeferenced orthophoto insertion (IGN PNOA WMS)
+- `tools_hidrologia_calculo.py` — surface hydrology formulas (Rational method, Kirpich, SCS); pure math
+- `tools_hidrologia_superficie.py` — hydrological analysis by sampling a TIN surface
+- `tools_historial.py` — command history read from the AutoCAD log file
+- `tools_lineas_muestreo.py` — native Civil 3D sample lines along alignments
+- `tools_perpendiculares.py` — sloped perpendiculars from an axis to road edges
+- `tools_sight_distance.py` — AASHTO sight distances; pure math
+- `tools_solidos.py` — solidify beam profiles via EXTRUDE
+- `tools_taludes.py` — slope catch-point geometry on a TIN surface
 
 `scripts/templates/` contains standalone Python scripts that replicate some
 operations without going through the MCP server, useful as reference or for
@@ -167,6 +178,17 @@ de herramientas independiente, registrado en `server.py`:
 - `tools_cotas.py` — cotas de nivel (MLeader) sobre bloques de sección
 - `tools_cache.py` — cache SQLite de entidades para capas grandes
 - `tools_textos.py` — búsqueda de textos y selección visual
+- `tools_asignar_z.py` — asignación de cota Z desde puntos COGO a vértices de líneas/polilíneas (por coincidencia XY)
+- `tools_cogo_calculo.py` — cálculo COGO clásico (poligonales, curvas circulares); matemática pura, sin dibujo
+- `tools_fotorreferencia.py` — inserción de ortofoto georreferenciada (WMS PNOA del IGN)
+- `tools_hidrologia_calculo.py` — fórmulas de hidrología superficial (Método Racional, Kirpich, SCS); matemática pura
+- `tools_hidrologia_superficie.py` — análisis hidrológico por muestreo de una superficie TIN
+- `tools_historial.py` — lectura del historial de comandos desde el archivo de registro de AutoCAD
+- `tools_lineas_muestreo.py` — líneas de muestreo nativas de Civil 3D sobre alineaciones
+- `tools_perpendiculares.py` — perpendiculares con pendiente desde un eje hasta los bordes de calzada
+- `tools_sight_distance.py` — distancias de visibilidad AASHTO; matemática pura
+- `tools_solidos.py` — solidificación de perfiles de viga mediante EXTRUDE
+- `tools_taludes.py` — geometría de taludes (punto de encuentro talud-terreno) sobre superficie TIN
 
 `scripts/templates/` contiene scripts Python standalone que replican algunas
 operaciones sin pasar por el servidor MCP, útiles como referencia o para

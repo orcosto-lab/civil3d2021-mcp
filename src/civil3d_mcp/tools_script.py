@@ -46,7 +46,14 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
         name="ejecutar_script",
         description=(
             "Ejecuta un script .scr de la carpeta scripts/ del MCP en Civil 3D. "
-            "Usa FILEDIA=0 para evitar dialogos. Ejemplo: nombre_script='crear_malla.scr'"
+            "Usa FILEDIA=0 para evitar dialogos. Ejemplo: nombre_script='crear_malla.scr' "
+            "LECCION: los cambios de capa DENTRO del .scr no son fiables - los objetos suelen "
+            "caer en capa 0. Crear primero y reasignar despues con cambiar_capa_objetos. "
+            "Para polilineas 3D con cota real usar el comando _3DPOLY dentro del script (NO 3DPOL, "
+            "ese comando no existe en Civil 3D 2021 espanol - verificado en vivo 03/08/2026). "
+            "LECCION: esta tool va por SendCommand y puede fallar sin devolver error - tras "
+            "ejecutarla, verificar el resultado real con leer_historial_comandos; si el registro "
+            "esta desactivado, pedir autorizacion para activar_historial_comandos (nunca activarlo sin avisar)."
         ),
     )
     async def ejecutar_script(nombre_script: str) -> dict[str, Any]:
@@ -89,7 +96,13 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
         description=(
             "Carga un plugin .NET (.dll) en Civil 3D via NETLOAD (FILEDIA=0). "
             "Usa executor dedicado — no bloquea el hilo COM principal aunque NETLOAD tarde. "
-            "Timeout: 20 s. Si hay dialogo abierto, devuelve aviso sin colgar el servidor."
+            "Timeout: 20 s. Si hay dialogo abierto, devuelve aviso sin colgar el servidor. "
+            "LECCION: OBLIGATORIO ejecutar esta tool tras cada reinicio de Claude Desktop "
+            "antes de usar cualquier tool de civil3d-sacred (el plugin no persiste). "
+            "Solo funciona con Civil 3D 2023+ (NO en P101, que tiene 2021). "
+            "LECCION: esta tool va por SendCommand y puede fallar sin devolver error - tras "
+            "ejecutarla, verificar el resultado real con leer_historial_comandos; si el registro "
+            "esta desactivado, pedir autorizacion para activar_historial_comandos (nunca activarlo sin avisar)."
         ),
     )
     async def cargar_plugin_dll(ruta_dll: str) -> dict[str, Any]:
