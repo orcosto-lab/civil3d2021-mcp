@@ -1,7 +1,7 @@
 """
 tools_cotas.py  -  Anotacion de cotas de nivel sobre bloques de seccion generados
 
-Flujo validado en dibujo de produccion B (03/07/2026):
+Flujo validado (03/07/2026):
 Un bloque generado desde un plano de seccion (AcDbSection) esta a escala 1:1 y
 su Y local es la altura sobre la Elevation del plano de seccion, por lo que
 cota_real = Y_local + Elevation. Los puntos a acotar son las intersecciones
@@ -324,7 +324,7 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
             "Aborta sin crear nada si menos del 80%% de los puntos casan con "
             "vertices del bloque. LECCION: las cotas se crean en amarillo (ACI 2) "
             "sobre capa_destino (IA por defecto); corregido 19/08/2026 tras "
-            "detectar cotas desplazadas en dibujo de produccion A -- version previa "
+            "detectar cotas desplazadas -- version previa "
             "usaba insercion_bloque + local_x sin calibrar, valido solo si el "
             "bloque no tiene margen interno antes de la geometria del corte."
         ),

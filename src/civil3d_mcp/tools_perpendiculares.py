@@ -2,7 +2,7 @@
 tools_perpendiculares.py  -  Generacion de perpendiculares con pendiente desde un eje (rasante)
 hasta los bordes de calzada, para bombeo/peralte simple a dos aguas.
 
-Metodo validado sobre dibujo de produccion D (14/07/2026): eje "Perfil" (AcDb3dPolyline con cota
+Metodo validado (14/07/2026): eje "Perfil" (AcDb3dPolyline con cota
 real) + bordes "Calles" (2 AcDb3dPolyline). Genera 2 lineas 3D por estacion (izq/der),
 cortando contra los bordes reales y aplicando una pendiente descendente constante desde
 el eje. Estaciones = rejilla cada N metros + puntos donde la pendiente longitudinal del

@@ -16,15 +16,15 @@ Verificado por prueba directa antes de implementar (22/07/2026, sesion Prosperid
   NO cuadrada 800x400px / 200x100m: escala=200 -> ImageWidth=200.0, ImageHeight=100.0,
   sin distorsion). Punto de insercion = esquina inferior izquierda (confirmado via
   GetBoundingBox).
-- Probado insertando y borrando sobre dibujo de produccion C, sin dejar
-  rastro, antes de tocar ningun dibujo real.
+- Probado insertando y borrando, sin dejar rastro, antes de tocar ningun
+  dibujo real.
 
 Diseno extensible a otras fuentes: _descargar_imagen(bbox, fuente) es el unico punto
 que conoce la fuente concreta (hoy solo "pnoa"); anadir un proveedor nuevo es anadir
 una rama ahi (y su propia funcion _descargar_imagen_<fuente>), sin tocar el resto.
 
-Estado tools_fotorreferencia.py / fotorreferencia: ✅ OK, confirmado por Pedro
-24/07/2026 (dibujo de produccion C y dibujo de produccion A).
+Estado tools_fotorreferencia.py / fotorreferencia: ✅ OK, confirmado
+24/07/2026.
 
 --- foto_mejorada (anadida 24/07/2026) ---
 
@@ -98,10 +98,10 @@ carpeta `models/` son solo datos `.bin`/`.param`, no binarios de plataforma). Mo
 usado: `realesrgan-x4plus` (fotografia real general; NO `x4plus-anime` ni
 `animevideov3`, pensados para dibujos/video).
 
-Prueba de pipeline hecha ANTES de escribir la tool (26/07/2026, dibujo de produccion A,
+Prueba de pipeline hecha ANTES de escribir la tool (26/07/2026,
 `_ortofoto_01.png` 434x265px/261 KB, via Desktop Commander sobre la maquina real -
 GPU detectada: NVIDIA GeForce RTX 3050 Laptop): upscale x4 -> 1736x1060/2.97 MB;
-reduccion Lanczos a 2x el original -> 868x530/831 KB. **Aprobada por Pedro
+reduccion Lanczos a 2x el original -> 868x530/831 KB. **Aprobada
 ("perfecta")** tras comparar tambien contra el x4 sin reducir (`_ortofoto_04.png`).
 escala_final por defecto = 2.0 (el resultado final mide 2x el original en cada eje).
 

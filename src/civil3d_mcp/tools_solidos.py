@@ -4,8 +4,8 @@ tools_solidos.py  -  Solidificacion de perfiles de viga (polilineas/lineas) medi
 Problema que resuelve: EXTRUDE exige un perfil cerrado Y exactamente coplanar para
 producir un AcDb3dSolid; si el perfil esta cerrado pero con vertices ligeramente
 alabeados (aunque sean pocos mm de desviacion), AutoCAD genera un AcDbExtrudedSurface
-en su lugar, sin dar ningun error explicito. Ver 00_NOTAS_PROYECTO.md para el caso
-real que origino esta herramienta (capa "05- Vigas", dibujo de produccion A, 15/07/2026).
+en su lugar, sin dar ningun error explicito. Caso real que origino esta herramienta:
+vigas en capa "05- Vigas" (15/07/2026).
 
 solidificar_viga acepta 1 o 2 handles de origen:
   - 1 handle: una AcDb3dPolyline cerrada con 4 vertices unicos (rectangulo). Se corrige
