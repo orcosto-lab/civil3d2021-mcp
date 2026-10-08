@@ -29,12 +29,12 @@ Estado tools_fotorreferencia.py / fotorreferencia: ✅ OK, confirmado
 --- foto_mejorada (anadida 24/07/2026) ---
 
 Segunda herramienta del mismo modulo: inserta una version de la ortofoto mejorada
-FUERA del servidor (hoy: subida por Pedro a un editor de imagen tipo ChatGPT; manana
+FUERA del servidor (hoy: subida por el usuario a un editor de imagen tipo ChatGPT; manana
 podria ser cualquier otro), en la misma posicion real que la ortofoto original ya
 insertada por `fotorreferencia`, en una capa separada ("98 Mejorada" por defecto)
 para poder comparar ambas superpuestas sin perder ninguna.
 
-Diseno (decisiones de Pedro, sesion 24/07/2026):
+Diseno (decisiones de diseno, sesion 24/07/2026):
 - La imagen original SIEMPRE se conserva en su capa; nunca se borra ni se sustituye.
   Si no esta presente cuando se llama a `foto_mejorada`, se regenera automaticamente
   llamando a la logica de `fotorreferencia` desde cero (misma capa "99 Ortofotos").
@@ -48,20 +48,20 @@ Diseno (decisiones de Pedro, sesion 24/07/2026):
   se compara el aspect ratio en pixeles de la imagen mejorada contra el de la imagen
   original (leido de las propiedades .Width/.Height del raster original, sin necesidad
   de localizar ni reabrir el PNG original en disco - la entidad COM ya lo sabe).
-  Tolerancia por defecto 2% (decidida por Pedro); si se supera, NO se inserta y se
-  devuelve el detalle para que Pedro decida.
+  Tolerancia por defecto 2% (decidida por diseno); si se supera, NO se inserta y se
+  devuelve el detalle para que el usuario decida.
 - Si hay mas de una imagen en capa_referencia (dibujos grandes con varias teselas),
   la herramienta NO intenta adivinar cual es la correspondiente: devuelve la lista de
   candidatos (handle, tamano) y pide que se repita la llamada con handle_referencia.
 
 Estado foto_mejorada: ⏳ recien creada, pendiente de probar en un dibujo real y de
-confirmacion de Pedro (no marcar como OK en TOOLS.md hasta entonces). Pendiente en
+confirmacion del usuario (no marcar como OK en TOOLS.md hasta entonces). Pendiente en
 particular: verificar en la practica el mensaje de error cuando hay >1 candidato, y
 el flujo de regeneracion automatica cuando no hay ninguna imagen todavia.
 
 --- mejorar_ortofoto_local (anadida 28/07/2026) ---
 
-Tercera herramienta del modulo: genera la version "mejorada" que antes producia Pedro
+Tercera herramienta del modulo: genera la version "mejorada" que antes producia el usuario
 subiendo el PNG a ChatGPT a mano. Sustituye ese paso por un pipeline 100% local:
 RealESRGAN (ejecutable portable `realesrgan-ncnn-vulkan.exe`, sin Python/CUDA, en
 `Filtros/realesrgan/` dentro del propio proyecto) + reduccion Pillow (LANCZOS).
@@ -73,10 +73,10 @@ fusionada. `mejorar_ortofoto_local` solo genera el PNG en disco y no toca el dib
 Cero riesgo sobre `foto_mejorada`, que ya esta confirmada en produccion.
 
 Por que este pipeline y no otras alternativas evaluadas antes (ver tambien wiki):
-- API de ChatGPT/OpenAI (gpt-image-1): descartada por Pedro por coste real por imagen
+- API de ChatGPT/OpenAI (gpt-image-1): descartada por coste real por imagen
   y por requerir verificacion de organizacion con ID - no compensa para uso ocasional.
 - RealESRGAN "a secas" (solo upscale x4, sin reducir): peso disparado (~3 MB para una
-  tesela de 434x265px que en original pesa ~260 KB) - descartado por Pedro
+  tesela de 434x265px que en original pesa ~260 KB) - descartado
   explicitamente por el peso del archivo.
 - RealESRGAN + reduccion Lanczos (el elegido): el escalado x4 sintetiza detalle de
   alta frecuencia (superresolucion real, no solo nitidez); la reduccion posterior lo
@@ -86,7 +86,7 @@ Por que este pipeline y no otras alternativas evaluadas antes (ver tambien wiki)
 
 Nota importante de honestidad tecnica (aplicable igual que el modelo de ChatGPT): el
 escalado sigue siendo generativo (el modelo sintetiza plausible, no mide realidad) -
-igual que la version manual de ChatGPT que Pedro ya daba por buena. Aceptable aqui
+igual que la version manual de ChatGPT que el usuario ya daba por buena. Aceptable aqui
 porque el resultado es SIEMPRE una capa de comparacion visual ("98 Mejorada"), nunca
 sustituye a la ortofoto original que sigue intacta en "99 Ortofotos".
 
@@ -106,7 +106,7 @@ reduccion Lanczos a 2x el original -> 868x530/831 KB. **Aprobada
 escala_final por defecto = 2.0 (el resultado final mide 2x el original en cada eje).
 
 Estado mejorar_ortofoto_local: ⏳ pipeline ya validado manualmente, pero la TOOL en si
-(wrapper MCP) recien escrita - pendiente de reinicio de Claude Desktop y de que Pedro
+(wrapper MCP) recien escrita - pendiente de reinicio de Claude Desktop y de que el usuario
 la pruebe llamandola de verdad antes de marcarla OK en TOOLS.md.
 """
 from __future__ import annotations
@@ -156,7 +156,7 @@ REALESRGAN_MODELS = FILTROS_DIR / "realesrgan" / "models"
 
 MODELO_REALESRGAN_DEFECTO = "realesrgan-x4plus"  # fotografia real; NO usar los de anime/video
 ESCALA_UPSCALE_NATIVA = 4  # factor fijo del modelo x4plus, no configurable
-ESCALA_FINAL_DEFECTO = 2.0  # resultado final = 2x el tamano ORIGINAL (aprobado por Pedro)
+ESCALA_FINAL_DEFECTO = 2.0  # resultado final = 2x el tamano ORIGINAL (aprobado)
 TIMEOUT_REALESRGAN_S = 300
 
 
@@ -634,7 +634,7 @@ def register(mcp: FastMCP, client: Civil3DClient, run_com: Callable) -> None:
             "completo sin reducir). Guarda el PNG junto al original (o en ruta_salida si "
             "se indica) y NO toca el dibujo de Civil 3D - la ruta devuelta se pasa tal "
             "cual a 'foto_mejorada' para insertarla, exactamente igual que si viniera de "
-            "una mejora manual externa. Pipeline aprobado por Pedro tras prueba "
+            "una mejora manual externa. Pipeline aprobado tras prueba "
             "comparativa (ver detalle en el modulo y en la wiki); escala_final no puede "
             "superar 4 (el modelo x4plus no produce mas resolucion real que esa)."
         ),

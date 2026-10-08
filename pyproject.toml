@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "civil3d-mcp"
-version = "1.2.1"
+version = "1.2.2"
 description = "Servidor MCP para Civil 3D via COM (pywin32)"
 requires-python = ">=3.11"
 dependencies = [

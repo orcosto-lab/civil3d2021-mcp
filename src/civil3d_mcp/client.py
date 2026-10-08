@@ -176,7 +176,7 @@ def forzar_escape_civil3d(client, intentos_foco: int = 3, espera_foco: float = 0
     entera con "Entrada no valida" (COM exception sincrona), tanto suelto como
     pegado al final de un comando completo. Solo una pulsacion de teclado real
     (a nivel de Windows, no de COM) libera la consola -- confirmado en pruebas
-    reales con Pedro pulsando Escape manualmente.
+    reales con el usuario pulsando Escape manualmente.
 
     Usa Application.HWND (ventana principal de AutoCAD), NO Document.HWND
     (puede ser un MDI child interno, menos fiable para SetForegroundWindow).
@@ -197,7 +197,7 @@ def forzar_escape_civil3d(client, intentos_foco: int = 3, espera_foco: float = 0
     de Windows -- un proceso en segundo plano (como este servidor MCP) no
     puede robar el primer plano salvo que cumpla ciertas condiciones (haber
     recibido input reciente, ser el mismo hilo que la ventana activa, etc.).
-    Confirmado en vivo: fallo real durante una prueba con Pedro delante de la
+    Confirmado en vivo: fallo real durante una prueba con el usuario delante de la
     pantalla, dejando el EXPLODE colgado sin liberar. Arreglo: adjuntar la
     cola de entrada del hilo actual a la del hilo de la ventana en primer
     plano via AttachThreadInput (tecnica estandar de la Win32 API para este

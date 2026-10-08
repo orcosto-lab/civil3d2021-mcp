@@ -17,7 +17,7 @@ directamente en la edicion vigente del AASHTO Green Book antes de implementarla.
 AVISO ADICIONAL: estas formulas son de AASHTO (normativa de EEUU). Si el proyecto es en
 Espana, la normativa aplicable para distancias de visibilidad y parada es la Instruccion
 de Carreteras 3.1-IC (Trazado), que usa formulas y valores distintos - no asumir que
-AASHTO es la referencia correcta sin confirmarlo con Pedro.
+AASHTO es la referencia correcta sin confirmarlo con el usuario.
 """
 from __future__ import annotations
 import logging

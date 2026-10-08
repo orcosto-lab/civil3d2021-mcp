@@ -4,7 +4,7 @@ Escanea capas completas de ModelSpace a una BD SQLite local (fuera de Google Dri
 para consultas sin el limite de 100 de listar_objetos y sin releer COM.
 BD: una por dibujo, en D:\\ZZZ Topografia\\Temp Civil IA\\<nombre_dwg>.sqlite
 Cada escaneo de capa REEMPLAZA las filas previas de esa capa (datos con timestamp:
-recordar que Pedro edita el dibujo en paralelo y la cache caduca rapido).
+recordar que el usuario edita el dibujo en paralelo y la cache caduca rapido).
 """
 from __future__ import annotations
 import json
